@@ -6,8 +6,6 @@ import {
   useRouter,
   HeadContent,
   Scripts,
-  useRouterState,
-  useNavigate,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
@@ -15,12 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import sleepyOg from "../assets/sleepy-og.jpg";
 import voidIcon from "../assets/void-icon.png.asset.json";
-import { AnimatedBackground } from "../components/AnimatedBackground";
-import { BottomNav } from "../components/BottomNav";
-import { ProfileGate } from "../components/ProfileGate";
-import { LogoWord } from "../components/Logo";
 import { useSettings } from "../lib/store";
-import { Toaster } from "../components/ui/sonner";
 import { supabase } from "../integrations/supabase/client";
 import { pullSync } from "../lib/sync";
 
@@ -161,42 +154,7 @@ function RootComponent() {
 }
 
 function AppShell() {
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const immersive = ["/watch", "/live", "/sports/", "/iptv", "/shorts"].some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`) || pathname.startsWith(prefix),
-  );
-
-  return (
-    <div className="relative min-h-screen overflow-x-clip bg-background text-foreground">
-      <AnimatedBackground />
-      {!immersive && (
-        <header className="fixed inset-x-0 top-0 z-30 px-3 pt-3 md:px-6 md:pt-5">
-          <div className="mx-auto flex max-w-7xl items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-2 py-1.5 shadow-lg backdrop-blur-xl">
-            <LogoWord size={30} />
-            <div className="hidden items-center gap-1 text-sm font-medium text-muted-foreground md:flex">
-              <Link to="/" className="rounded-xl px-3 py-2 transition hover:bg-white/10 hover:text-foreground">
-                Home
-              </Link>
-              <Link to="/explore" className="rounded-xl px-3 py-2 transition hover:bg-white/10 hover:text-foreground">
-                Explore
-              </Link>
-              <Link to="/sports" className="rounded-xl px-3 py-2 transition hover:bg-white/10 hover:text-foreground">
-                Sports
-              </Link>
-            </div>
-          </div>
-        </header>
-      )}
-      <main className={immersive ? "min-h-screen" : "min-h-screen pt-20 md:pt-28"}>
-        <Outlet />
-        <SiteFooter pathname={pathname} />
-      </main>
-      {!immersive && <BottomNav />}
-      <ProfileGate />
-      <Toaster />
-      <AutoSync />
-    </div>
-  );
+  return <Outlet />;
 }
 
 /** Restores the signed-in user's cloud library once per session on launch. */
