@@ -10,8 +10,8 @@ import { clearAllProgress } from "@/lib/progress";
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "Settings — Sleepy" },
-      { name: "description", content: "Customize every part of your Sleepy experience." },
+      { title: "Settings — Baumer" },
+      { name: "description", content: "Customize every part of your Baumer experience." },
     ],
   }),
   component: SettingsPage,
@@ -363,7 +363,7 @@ function RegionDetectButton({ onPicked }: { onPicked: (r: Region) => void }) {
         setLoading(true);
         setResult(null);
         try {
-          if (typeof window !== "undefined") localStorage.removeItem("sleepy.region.v1");
+          if (typeof window !== "undefined") localStorage.removeItem("baumer.region.v1");
           const r = await detectRegion();
           onPicked(r);
           setResult(r);
@@ -603,7 +603,7 @@ function SettingsPage() {
           )}
         </Section>
 
-        <Section title="Appearance" desc="Customize how Sleepy looks and feels.">
+        <Section title="Appearance" desc="Customize how Baumer looks and feels.">
           <Row label="Animated background" hint="Soft drifting orbs behind the UI.">
             <Toggle value={s.animatedBg} onChange={(v) => set({ animatedBg: v })} />
           </Row>
@@ -703,7 +703,7 @@ function SettingsPage() {
 
         <button
           onClick={() => {
-            localStorage.removeItem("sleepy.settings.v2");
+            localStorage.removeItem("baumer.settings.v2");
             location.reload();
           }}
           className="liquid-glass rounded-full px-5 py-2.5 text-sm font-semibold text-muted-foreground transition hover:text-foreground"

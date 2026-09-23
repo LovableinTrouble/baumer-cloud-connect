@@ -235,9 +235,9 @@ function toQualities(results: { name: string; url: string; quality?: string; typ
     });
 }
 
-// Sleepy Sources worker — one shape-tolerant parser for every upstream provider.
+// Baumer Sources worker — one shape-tolerant parser for every upstream provider.
 // Handles: sources[] (hls/m3u8), source.qualities{} (mp4/dash), single url, mpd/dash.
-function collectSleepyItems(json: any): { url: string; name: string; quality?: string; type?: string }[] {
+function collectBaumerItems(json: any): { url: string; name: string; quality?: string; type?: string }[] {
   const out: { url: string; name: string; quality?: string; type?: string }[] = [];
   const push = (url: any, quality?: any, type?: any, name?: any) => {
     const u = String(url || "");
@@ -263,7 +263,7 @@ function collectSleepyItems(json: any): { url: string; name: string; quality?: s
   return out.filter((s) => (seen.has(s.url) ? false : (seen.add(s.url), true)));
 }
 
-async function scrapeSleepySource(providerId: ProviderId, providerName: string, i: ResolveInput, fast = false): Promise<StreamQuality[]> {
+async function scrapeBaumerSource(providerId: ProviderId, providerName: string, i: ResolveInput, fast = false): Promise<StreamQuality[]> {
   const slug = SLEEPY_SLUGS[providerId];
   if (!slug) return [];
   const params = new URLSearchParams({ type: i.type === "movie" ? "movie" : "tv", tmdb: i.tmdbId });
@@ -279,7 +279,7 @@ async function scrapeSleepySource(providerId: ProviderId, providerName: string, 
     if (!res.ok) return [];
     const json: any = await res.json();
     if (json?.error) return [];
-    const items = collectSleepyItems(json);
+    const items = collectBaumerItems(json);
     if (!items.length) return [];
     const parsed = uniqueByQuality(toQualities(items, providerId, providerName, true));
     // Verify the manifests actually serve before we hand them to the player.
@@ -341,7 +341,7 @@ export async function resolveProviderById(id: ProviderId, input: ResolveInput, o
     ? scrapeVidPhantom(id, meta.name, input, options.fast)
     : id === "febbox"
       ? scrapeFebbox(id, meta.name, input, options.febboxCookie)
-      : scrapeSleepySource(id, meta.name, input, options.fast);
+      : scrapeBaumerSource(id, meta.name, input, options.fast);
   // The first-pass resolver must not wait up to ten seconds for captions before
   // handing a playable manifest to the browser. The background full pass adds
   // captions immediately afterward.
@@ -443,7 +443,7 @@ export async function resolveDirect(input: ResolveInput): Promise<ResolveResult>
   const direct: DirectSource = {
     kind: "direct",
     id: "direct",
-    name: "Sleepy Player",
+    name: "Baumer Player",
     badge: "HLS",
     qualities: primary,
     subtitles: subs,

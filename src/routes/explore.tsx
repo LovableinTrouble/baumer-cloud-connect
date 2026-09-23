@@ -21,7 +21,7 @@ import { stashWatchMedia } from "@/lib/watch-stash";
 export const Route = createFileRoute("/explore")({
   head: () => ({
     meta: [
-      { title: "Explore — Sleepy" },
+      { title: "Explore — Baumer" },
       {
         name: "description",
         content:

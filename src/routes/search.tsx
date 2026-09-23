@@ -16,8 +16,8 @@ import {
 export const Route = createFileRoute("/search")({
   head: () => ({
     meta: [
-      { title: "Search — Sleepy" },
-      { name: "description", content: "Search the Sleepy catalog." },
+      { title: "Search — Baumer" },
+      { name: "description", content: "Search the Baumer catalog." },
     ],
   }),
   component: Search,

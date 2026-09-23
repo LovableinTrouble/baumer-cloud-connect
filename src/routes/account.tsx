@@ -31,16 +31,16 @@ export const Route = createFileRoute("/account")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Your account — Sleepy" },
+      { title: "Your account — Baumer" },
       {
         name: "description",
         content:
-          "Manage your Sleepy account, profile picture and preferences. Your watchlist, continue watching and settings sync automatically across devices.",
+          "Manage your Baumer account, profile picture and preferences. Your watchlist, continue watching and settings sync automatically across devices.",
       },
-      { property: "og:title", content: "Your account — Sleepy" },
+      { property: "og:title", content: "Your account — Baumer" },
       {
         property: "og:description",
-        content: "Manage your Sleepy account — your library syncs automatically across devices.",
+        content: "Manage your Baumer account — your library syncs automatically across devices.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -446,7 +446,7 @@ function AccountPage() {
               Keep this device in sync
               <span className="block text-xs text-muted-foreground">
                 Saves your watchlist, progress and preferences as you go, and restores them when you
-                open Sleepy.
+                open Baumer.
               </span>
             </span>
             <input

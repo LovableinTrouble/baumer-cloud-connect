@@ -1,12 +1,28 @@
-import { createFileRoute } from "@tanstack/react-router";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { Hero } from "@/components/Hero";
+import { MediaRow } from "@/components/MediaRow";
+import { ContinueWatchingRow } from "@/components/ContinueWatching";
+import { NotificationBell } from "@/components/NotificationBell";
+import { fetchTrending, fetchPopular, fetchTopRated, fetchAnime } from "@/lib/tmdb";
+import { stashWatchMedia } from "@/lib/watch-stash";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [{ title: "" }],
-  }),
-  component: BlankPage,
+  head: () => ({ meta: [{ title: "Baumer — Home" }] }),
+  component: BaumerHome,
 });
 
-function BlankPage() {
-  return <main aria-label="Blank page" className="min-h-screen" />;
+function BaumerHome() {
+  const navigate = useNavigate();
+  const trending = useQuery({ queryKey: ["trending"], queryFn: () => fetchTrending("all"), staleTime: 5 * 60_000 });
+  const movies = useQuery({ queryKey: ["popular-movies"], queryFn: () => fetchPopular("movie", 2), staleTime: 5 * 60_000 });
+  const tv = useQuery({ queryKey: ["popular-tv"], queryFn: () => fetchPopular("tv", 2), staleTime: 5 * 60_000 });
+  const top = useQuery({ queryKey: ["top-movies"], queryFn: () => fetchTopRated("movie", 1), staleTime: 5 * 60_000 });
+  const anime = useQuery({ queryKey: ["anime-trending-week-v2"], queryFn: () => fetchAnime(2), staleTime: 30 * 60_000 });
+  const featured = (trending.data ?? []).slice(0, 6);
+  const openDetails = (m: any) => { stashWatchMedia(m); navigate({ to: "/media/$type/$id", params: { type: m.type, id: String(m.id) } }); };
+  const play = (m: any) => { stashWatchMedia(m); navigate({ to: "/watch/$id", params: { id: String(m.id) }, search: { t: m.type, s: undefined, e: undefined, party: undefined } }); };
+  return <div className="relative min-h-screen pb-20 md:pb-8 animate-page-in"><div className="pointer-events-none fixed right-4 top-4 z-40 md:right-6 md:top-5"><div className="pointer-events-auto"><NotificationBell /></div></div>{featured.length ? <Hero items={featured} onPlay={play} onMore={openDetails} /> : <div className="h-[100svh] min-h-[620px] w-full animate-shimmer" />}<main className="relative z-20 -mt-24 animate-soft-rise space-y-8 md:-mt-28 md:space-y-10"><ContinueWatchingRow /><Row title="Trending This Week" q={trending} /><Row title="Popular Movies" q={movies} /><Row title="Top TV Shows" q={tv} /><Row title="Top Rated Movies" q={top} /><Row title="Anime — Trending This Week" q={anime} /></main></div>;
 }
+function Row({ title, q }: { title: string; q: ReturnType<typeof useQuery<any>> }) { if (q.isLoading) return <section className="px-4 md:px-8"><div className="mb-3 h-5 w-48 rounded-md animate-shimmer" /><div className="flex gap-4 overflow-hidden">{Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-64 w-40 shrink-0 rounded-2xl animate-shimmer md:w-44" />)}</div></section>; if (q.isError || !q.data?.length) return null; return <MediaRow title={title} items={q.data} />; }

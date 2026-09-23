@@ -14,7 +14,7 @@ import {
   type ViewerProfile,
 } from "@/lib/profiles";
 
-const SESSION_KEY = "sleepy.profileGateShown";
+const SESSION_KEY = "baumer.profileGateShown";
 
 function seenThisSession() {
   try {
@@ -162,7 +162,7 @@ export function ProfileGate() {
       >
         <header className="flex shrink-0 items-start gap-3 border-b border-foreground/10 px-4 py-4 sm:px-8 sm:py-6">
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">Sleepy profiles</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">Baumer profiles</p>
             <h1 id="profile-gate-title" className="mt-1.5 text-xl font-black tracking-tight sm:text-3xl">
               {heading}
             </h1>

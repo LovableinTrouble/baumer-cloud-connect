@@ -4,11 +4,11 @@ import { Download, Shield, Zap, Smartphone, Star, Check, Sparkles, Wifi, Lock } 
 export const Route = createFileRoute("/install")({
   head: () => ({
     meta: [
-      { title: "Get the Sleepy App — Install on Android" },
+      { title: "Get the Baumer App — Install on Android" },
       {
         name: "description",
         content:
-          "Download Sleepy for Android. Movies, TV, anime, sports and live channels in one beautiful, fast app.",
+          "Download Baumer for Android. Movies, TV, anime, sports and live channels in one beautiful, fast app.",
       },
     ],
   }),
@@ -48,7 +48,7 @@ function InstallPage() {
                 v2.0 — Now available
               </div>
               <h1 className="mt-4 text-4xl font-black leading-[1.05] tracking-tight md:text-6xl">
-                Sleepy for
+                Baumer for
                 <br />
                 <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                   Android.
@@ -161,7 +161,7 @@ function InstallPage() {
                 },
                 {
                   title: "Open & enjoy",
-                  desc: "Launch Sleepy from your app drawer and start streaming.",
+                  desc: "Launch Baumer from your app drawer and start streaming.",
                 },
               ].map((s, i) => (
                 <li key={s.title} className="flex items-start gap-4">
@@ -186,7 +186,7 @@ function InstallPage() {
             download
             className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground transition hover:brightness-110 active:scale-95"
           >
-            <Download className="h-4 w-4" /> Get Sleepy APK
+            <Download className="h-4 w-4" /> Get Baumer APK
           </a>
           <p className="text-xs text-muted-foreground">Free • ~15 MB • Android 6.0+</p>
         </section>

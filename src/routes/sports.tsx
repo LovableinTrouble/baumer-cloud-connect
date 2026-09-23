@@ -17,7 +17,7 @@ import { LiveTabs } from "@/components/LiveTabs";
 export const Route = createFileRoute("/sports")({
   head: () => ({
     meta: [
-      { title: "Live Sports — Sleepy" },
+      { title: "Live Sports — Baumer" },
       { name: "description", content: "Watch live sports matches airing right now." },
     ],
   }),

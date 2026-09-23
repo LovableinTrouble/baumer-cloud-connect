@@ -93,16 +93,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover",
       },
-      { title: "Sleepy — Stream Everything" },
+      { title: "Baumer — Stream Everything" },
       {
         name: "description",
         content:
-          "Sleepy — stream movies, TV shows, anime, live sports and IPTV channels in one beautiful, fast UI.",
+          "Baumer — stream movies, TV shows, anime, live sports and IPTV channels in one beautiful, fast UI.",
       },
-      { name: "author", content: "Sleepy" },
+      { name: "author", content: "Baumer" },
       { name: "theme-color", content: "#0b0b12" },
-      { property: "og:site_name", content: "Sleepy" },
-      { property: "og:title", content: "Sleepy — Stream Everything" },
+      { property: "og:site_name", content: "Baumer" },
+      { property: "og:title", content: "Baumer — Stream Everything" },
       {
         property: "og:description",
         content: "Stream movies, TV, anime, live sports and IPTV in one beautiful, fast UI.",
@@ -110,7 +110,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://xullys.xyz" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Sleepy — Stream Everything" },
+      { name: "twitter:title", content: "Baumer — Stream Everything" },
       {
         name: "twitter:description",
         content: "Stream movies, TV, anime, live sports and IPTV in one beautiful, fast UI.",
@@ -199,7 +199,7 @@ function SiteFooter({ pathname }: { pathname: string }) {
       <div className="mx-auto max-w-7xl rounded-2xl glass-strong px-6 py-6 text-sm text-white/70">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="space-y-1">
-            <div className="text-base font-semibold text-white tracking-tight">Sleepy</div>
+            <div className="text-base font-semibold text-white tracking-tight">Baumer</div>
             <p className="max-w-xl text-white/60">
               Stream movies, TV shows, anime, live sports and IPTV channels in one beautiful, fast
               UI.
@@ -216,7 +216,7 @@ function SiteFooter({ pathname }: { pathname: string }) {
           </div>
         </div>
         <div className="mt-4 border-t border-white/10 pt-3 text-xs text-white/40">
-          © {new Date().getFullYear()} Sleepy. All trademarks belong to their respective owners.
+          © {new Date().getFullYear()} Baumer. All trademarks belong to their respective owners.
         </div>
       </div>
     </footer>

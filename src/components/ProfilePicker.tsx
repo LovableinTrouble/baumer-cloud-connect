@@ -56,7 +56,7 @@ export function ProfilePicker({ userId, profile, onClose, onSave }: Props) {
       <div className="liquid-glass flex max-h-[94dvh] w-full max-w-lg animate-fade-in flex-col overflow-hidden rounded-t-[1.75rem] sm:max-h-[min(760px,calc(100dvh-2.5rem))] sm:rounded-[2rem]">
         <header className="flex shrink-0 items-start gap-3 border-b border-foreground/10 px-4 py-4 sm:px-7 sm:py-5">
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Personalize Sleepy</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Personalize Baumer</p>
             <h2 id="profile-dialog-title" className="mt-1 truncate text-xl font-black">
               {profile ? "Edit profile" : "New profile"}
             </h2>

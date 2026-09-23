@@ -10,16 +10,16 @@ export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Sign in — Sleepy" },
+      { title: "Sign in — Baumer" },
       {
         name: "description",
         content:
-          "Sign in to Sleepy to sync your watchlist, continue watching and preferences across every device.",
+          "Sign in to Baumer to sync your watchlist, continue watching and preferences across every device.",
       },
-      { property: "og:title", content: "Sign in — Sleepy" },
+      { property: "og:title", content: "Sign in — Baumer" },
       {
         property: "og:description",
-        content: "Sync your watchlist and preferences across devices with a Sleepy account.",
+        content: "Sync your watchlist and preferences across devices with a Baumer account.",
       },
     ],
   }),

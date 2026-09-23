@@ -7,7 +7,7 @@ import { loadStashedMedia } from "@/lib/watch-stash";
 import { fetchEpisodeAirStatus } from "@/lib/tmdb";
 import type { Media } from "@/lib/catalog";
 
-const SEEN_KEY = "sleepy.notifications.seenAt";
+const SEEN_KEY = "baumer.notifications.seenAt";
 const WINDOW_DAYS = 21;
 
 interface Item {
