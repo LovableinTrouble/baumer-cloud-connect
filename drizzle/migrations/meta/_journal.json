@@ -8,6 +8,13 @@
       "when": 1790192975514,
       "tag": "0000_init_profiles_sync",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790193013633,
+      "tag": "0001_avatar_storage_policies",
+      "breakpoints": true
     }
   ]
 }
