@@ -57,9 +57,15 @@ export function ProfileGate() {
 
   useEffect(() => {
     let alive = true;
-    void supabase.auth
-      .getSession()
-      .then(async ({ data }) => {
+    let sessionRequest: ReturnType<typeof supabase.auth.getSession>;
+    try {
+      sessionRequest = supabase.auth.getSession();
+    } catch {
+      return () => {
+        alive = false;
+      };
+    }
+    void sessionRequest.then(async ({ data }) => {
         const uid = data.session?.user?.id ?? null;
         if (!alive || !uid) return;
         setUserId(uid);
