@@ -16,6 +16,9 @@ import voidIcon from "../assets/void-icon.png.asset.json";
 import { useSettings } from "../lib/store";
 import { supabase } from "../integrations/supabase/client";
 import { pullSync } from "../lib/sync";
+import { BottomNav } from "../components/BottomNav";
+import { ProfileGate } from "../components/ProfileGate";
+import { Toaster } from "../components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -154,7 +157,15 @@ function RootComponent() {
 }
 
 function AppShell() {
-  return <Outlet />;
+  return (
+    <>
+      <Outlet />
+      <BottomNav />
+      <ProfileGate />
+      <Toaster />
+      <AutoSync />
+    </>
+  );
 }
 
 /** Restores the signed-in user's cloud library once per session on launch. */
