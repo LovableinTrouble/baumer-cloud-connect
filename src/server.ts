@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 
 type ServerEntry = {
-  fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
+  fetch: (request: Request, env: any, ctx: any) => Promise<Response> | Response;
 };
 
 let serverEntryPromise: Promise<ServerEntry> | undefined;
@@ -26,7 +27,9 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   if (!contentType.includes("application/json")) return response;
 
   const body = await response.clone().text();
-  if (!isH3SwallowedErrorBody(body)) return response;
+  if (!body.includes('"unhandled":true') || !body.includes('"message":"HTTPError"')) {
+    return response;
+  }
 
   console.error(consumeLastCapturedError() ?? new Error(`h3 swallowed SSR error: ${body}`));
   return new Response(renderErrorPage(), {
@@ -35,17 +38,37 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   });
 }
 
-function isH3SwallowedErrorBody(body: string): boolean {
+function unauthorizedResponse(): Response {
+  return new Response(null, {
+    status: 401,
+    headers: { "WWW-Authenticate": 'Basic realm="Private Family Portal", charset="UTF-8"' },
+  });
+}
+
+function isAuthorized(request: Request, env: any): boolean {
+  const expectedUsername = env?.BASIC_AUTH_USERNAME ?? process.env.BASIC_AUTH_USERNAME;
+  const expectedPassword = env?.BASIC_AUTH_PASSWORD ?? process.env.BASIC_AUTH_PASSWORD;
+  if (!expectedUsername || !expectedPassword) return false;
+
+  const header = request.headers.get("authorization");
+  if (!header?.startsWith("Basic ")) return false;
+
   try {
-    const payload = JSON.parse(body) as { unhandled?: unknown; message?: unknown };
-    return payload.unhandled === true && payload.message === "HTTPError";
+    const decoded = atob(header.slice(6));
+    const separator = decoded.indexOf(":");
+    if (separator < 0) return false;
+    const username = decoded.slice(0, separator);
+    const password = decoded.slice(separator + 1);
+    return username === expectedUsername && password === expectedPassword;
   } catch {
     return false;
   }
 }
 
 export default {
-  async fetch(request: Request, env: unknown, ctx: unknown) {
+  async fetch(request: Request, env: any, ctx: any) {
+    if (!isAuthorized(request, env)) return unauthorizedResponse();
+
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
