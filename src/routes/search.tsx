@@ -1,0 +1,469 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { CornerDownLeft, Sparkles } from "lucide-react";
+import { MediaCard } from "@/components/MediaCard";
+import { searchMulti, searchPeople, fetchTrending } from "@/lib/tmdb";
+import { aiSearchTitles } from "@/lib/ai.functions";
+import {
+  addRecentSearch,
+  clearRecentSearches,
+  removeRecentSearch,
+  useRecentSearches,
+} from "@/lib/recent-searches";
+
+export const Route = createFileRoute("/search")({
+  head: () => ({
+    meta: [
+      { title: "Search — Sleepy" },
+      { name: "description", content: "Search the Sleepy catalog." },
+    ],
+  }),
+  component: Search,
+});
+
+type FilterType = "all" | "movie" | "tv" | "anime" | "people";
+type SortKey = "relevance" | "rating" | "year";
+
+function Search() {
+  const [q, setQ] = useState("");
+  const [debounced, setDebounced] = useState("");
+  const [filter, setFilter] = useState<FilterType>("all");
+  const [sort, setSort] = useState<SortKey>("relevance");
+  const [aiMode, setAiMode] = useState(false);
+  // AI search runs only on explicit submit (Enter or the Ask button).
+  const [aiQuery, setAiQuery] = useState("");
+  const recents = useRecentSearches();
+  const aiFn = useServerFn(aiSearchTitles);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(q.trim()), 350);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  useEffect(() => {
+    if (!debounced || aiMode) return;
+    const t = setTimeout(() => addRecentSearch(debounced), 1200);
+    return () => clearTimeout(t);
+  }, [debounced, aiMode]);
+
+  const trend = useQuery({
+    queryKey: ["search-trending"],
+    queryFn: () => fetchTrending("all"),
+    staleTime: 5 * 60_000,
+  });
+  const res = useQuery({
+    queryKey: ["search", debounced],
+    queryFn: () => searchMulti(debounced),
+    enabled: debounced.length > 0 && !aiMode,
+  });
+  const people = useQuery({
+    queryKey: ["search-people", debounced],
+    queryFn: () => searchPeople(debounced),
+    enabled: debounced.length > 0 && !aiMode,
+  });
+  const ai = useQuery({
+    queryKey: ["ai-search", aiQuery],
+    queryFn: async () => {
+      const r = await aiFn({ data: { query: aiQuery } });
+      if (!r.titles.length) {
+        const direct = await searchMulti(aiQuery).catch(() => []);
+        return { results: direct, error: r.error, aiUsed: false };
+      }
+      // For each AI title, search TMDB and take only the top result (best match).
+      const perTitle = await Promise.all(
+        r.titles.slice(0, 5).map(async (t) => {
+          const results = await searchMulti(t).catch(() => []);
+          // Return only the single best match for this title.
+          return results[0] ? [results[0]] : [];
+        }),
+      );
+      const seen = new Set<string>();
+      const merged = perTitle.flat().filter((m) => {
+        const k = `${m.type}-${m.id}`;
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
+      return { results: merged, error: r.error, aiUsed: true };
+    },
+    enabled: aiQuery.length > 0 && aiMode,
+    retry: 0,
+  });
+
+  // The query that labels the current result set.
+  const activeQ = aiMode ? aiQuery : debounced;
+  const submitAi = () => {
+    const term = q.trim();
+    if (!term) return;
+    setAiQuery(term);
+    addRecentSearch(term);
+  };
+
+  const rawResults = activeQ
+    ? aiMode
+      ? (ai.data?.results ?? [])
+      : (res.data ?? [])
+    : (trend.data ?? []);
+  const loading = activeQ
+    ? aiMode
+      ? ai.isLoading || ai.isFetching
+      : res.isLoading || people.isLoading
+    : trend.isLoading;
+  const peopleResults = debounced && !aiMode ? (people.data ?? []) : [];
+  const showRecents = !activeQ && recents.length > 0;
+
+  const results = useMemo(() => {
+    let items = rawResults;
+    if (filter !== "all" && filter !== "people") items = items.filter((m) => m.type === filter);
+    if (filter === "people") items = [];
+    if (sort === "rating") items = [...items].sort((a, b) => b.rating - a.rating);
+    else if (sort === "year") items = [...items].sort((a, b) => Number(b.year) - Number(a.year));
+    return items;
+  }, [rawResults, filter, sort]);
+
+  const showPeople =
+    !aiMode && debounced && (filter === "all" || filter === "people") && peopleResults.length > 0;
+  const totalCount = results.length + (showPeople ? peopleResults.length : 0);
+
+  return (
+    <div className="min-h-screen px-4 pb-32 pt-12 sm:px-6 md:px-10 md:pt-16 animate-page-in">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-8">
+          <div className="text-xs uppercase tracking-[0.32em] text-primary/80">
+            {aiMode ? "AI Search" : "Search"}
+          </div>
+          <h1 className="mt-3 text-3xl font-bold tracking-tight md:text-5xl">
+            {aiMode ? "Find something with AI" : "Find something to watch"}
+          </h1>
+        </div>
+
+        {/* Clean search bar */}
+        <div className="sticky top-3 z-20 md:top-4">
+          <div className="search-surface group relative flex items-center gap-3 rounded-2xl py-2.5 pl-5 pr-2.5 transition-all duration-300 focus-within:border-foreground/20 focus-within:ring-2 focus-within:ring-foreground/10">
+            <svg
+              viewBox="0 0 24 24"
+              className="h-4 w-4 shrink-0 text-muted-foreground transition group-focus-within:text-primary"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" strokeLinecap="round" />
+            </svg>
+            <input
+              autoFocus
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key !== "Enter" || !q.trim()) return;
+                if (aiMode) submitAi();
+                else addRecentSearch(q.trim());
+              }}
+              placeholder={
+                aiMode ? "Ask AI: mood, genre, actor, vibe…" : "Movies, TV, anime, people…"
+              }
+               className="h-10 min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground/70"
+            />
+            <button
+              onClick={() => setAiMode((v) => !v)}
+              aria-pressed={aiMode}
+              title={aiMode ? "Turn AI off" : "Search with AI"}
+              className={`flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition ${
+                aiMode
+                  ? "bg-primary text-primary-foreground shadow-[0_0_20px_color-mix(in_oklab,var(--primary)_45%,transparent)]"
+                  : "liquid-glass text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              AI
+            </button>
+            {aiMode && (
+              <button
+                onClick={submitAi}
+                disabled={!q.trim() || loading}
+                title="Ask AI (Enter)"
+                className="liquid-pill flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-xs font-bold transition disabled:opacity-50"
+              >
+                Ask
+                <CornerDownLeft className="h-3.5 w-3.5" />
+              </button>
+            )}
+            {q && (
+              <button
+                onClick={() => setQ("")}
+                className="liquid-icon grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition hover:text-foreground"
+                aria-label="Clear search"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-3.5 w-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                >
+                  <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          {/* Filter chips */}
+          {!aiMode && (
+            <div className="mt-3 flex flex-wrap items-center gap-2 animate-fade-in">
+              <div className="filter-rail flex max-w-full items-center gap-1 overflow-x-auto rounded-xl p-1 no-scrollbar">
+                {(
+                  [
+                    ["all", "All"],
+                    ["movie", "Movies"],
+                    ["tv", "TV"],
+                    ["anime", "Anime"],
+                    ["people", "People"],
+                  ] as [FilterType, string][]
+                ).map(([k, label]) => (
+                  <button
+                    key={k}
+                    onClick={() => setFilter(k)}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                      filter === k
+                        ? "liquid-pill text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <SearchSortSelect value={sort} onChange={setSort} />
+            </div>
+          )}
+        </div>
+
+        {showRecents && (
+          <section className="mt-7 animate-fade-in">
+            <div className="mb-3 flex items-baseline justify-between">
+              <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                Recent
+              </h2>
+              <button
+                onClick={clearRecentSearches}
+                className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground transition hover:text-foreground"
+              >
+                Clear all
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {recents.map((term, i) => (
+                <div
+                  key={term}
+                  style={{ animationDelay: `${i * 25}ms` }}
+                  className="group/chip flex items-center gap-1 rounded-full bg-white/[0.04] pl-3 pr-1 ring-1 ring-white/10 transition hover:bg-white/[0.08] animate-fade-in"
+                >
+                  <button
+                    onClick={() => setQ(term)}
+                    className="flex items-center gap-2 py-1.5 text-sm font-medium text-foreground"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="h-3.5 w-3.5 text-muted-foreground"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M12 8v4l3 2" />
+                      <circle cx="12" cy="12" r="9" />
+                    </svg>
+                    {term}
+                  </button>
+                  <button
+                    onClick={() => removeRecentSearch(term)}
+                    aria-label={`Remove ${term}`}
+                    className="rounded-full p-1.5 text-muted-foreground opacity-0 transition group-hover/chip:opacity-100 hover:bg-white/10 hover:text-foreground"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="h-3 w-3"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.6"
+                    >
+                      <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <div className="mt-12 flex items-baseline justify-between border-b border-foreground/10 pb-4">
+          <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+            {activeQ ? `Results for "${activeQ}"` : "Trending now"}
+          </h2>
+          {!loading && (
+            <div className="text-xs text-muted-foreground">
+              {totalCount} result{totalCount === 1 ? "" : "s"}
+            </div>
+          )}
+        </div>
+
+        {loading ? (
+          <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="aspect-[2/3] rounded-xl animate-shimmer" />
+            ))}
+          </div>
+        ) : totalCount === 0 && activeQ ? (
+          <div className="mt-16 flex flex-col items-center text-center text-muted-foreground animate-fade-in">
+            <div className="grid h-16 w-16 place-items-center rounded-full bg-white/5 ring-1 ring-white/10">
+              <svg
+                viewBox="0 0 24 24"
+                className="h-7 w-7"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.5-3.5" />
+              </svg>
+            </div>
+            <p className="mt-4 text-sm">
+              No matches for <span className="font-semibold text-foreground">"{activeQ}"</span>
+            </p>
+          </div>
+        ) : (
+          <>
+            {showPeople && (
+              <section className="mt-6">
+                <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                  People
+                </h3>
+                <div className="grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+                  {peopleResults.map((p, i) => (
+                    <Link
+                      key={p.id}
+                      to="/person/$id"
+                      params={{ id: String(p.id) }}
+                      style={{ animationDelay: `${Math.min(i, 18) * 25}ms` }}
+                      className="group flex flex-col items-center text-center animate-soft-rise"
+                    >
+                      <div className="h-24 w-24 overflow-hidden rounded-full ring-1 ring-white/10 transition group-hover:ring-primary/60 sm:h-28 sm:w-28">
+                        {p.profile ? (
+                          <img
+                            src={p.profile}
+                            alt={p.name}
+                            loading="lazy"
+                            className="h-full w-full object-cover transition group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="grid h-full w-full place-items-center bg-white/5 text-xs text-muted-foreground">
+                            No photo
+                          </div>
+                        )}
+                      </div>
+                      <div className="mt-2 line-clamp-1 text-sm font-semibold text-foreground">
+                        {p.name}
+                      </div>
+                      {p.knownFor && (
+                        <div className="line-clamp-1 text-[11px] text-muted-foreground">
+                          {p.knownFor}
+                        </div>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+            {results.length > 0 && (
+              <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-9 overflow-visible sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                {results.map((m, i) => (
+                  <div
+                    key={`${m.type}-${m.id}`}
+                    style={{ animationDelay: `${Math.min(i, 18) * 25}ms` }}
+                    className="animate-soft-rise"
+                  >
+                    <MediaCard media={m} fill />
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const SEARCH_SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: "relevance", label: "Most relevant" },
+  { key: "rating", label: "Top rated" },
+  { key: "year", label: "Newest" },
+];
+
+function SearchSortSelect({ value, onChange }: { value: SortKey; onChange: (v: SortKey) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const active = SEARCH_SORT_OPTIONS.find((o) => o.key === value) ?? SEARCH_SORT_OPTIONS[0];
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="filter-rail flex h-9 min-w-36 items-center justify-between gap-3 rounded-xl px-3 text-xs font-semibold text-foreground transition"
+        aria-expanded={open}
+      >
+        <span className="truncate">{active.label}</span>
+        <svg
+          viewBox="0 0 24 24"
+          className={`h-3 w-3 shrink-0 text-muted-foreground transition ${open ? "rotate-180" : ""}`}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+      <div
+        className={`absolute left-0 top-10 z-40 w-44 overflow-hidden rounded-2xl border border-white/10 bg-[oklch(0.16_0.02_280)] p-1.5 text-white shadow-2xl transition duration-150 ${open ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-1 opacity-0"}`}
+      >
+        {SEARCH_SORT_OPTIONS.map((option) => (
+          <button
+            key={option.key}
+            onClick={() => {
+              onChange(option.key);
+              setOpen(false);
+            }}
+            className={`flex h-9 w-full items-center justify-between rounded-xl px-3 text-left text-xs font-semibold transition ${value === option.key ? "bg-primary/20 text-white ring-1 ring-primary/35" : "text-white/65 hover:bg-white/8 hover:text-white"}`}
+          >
+            {option.label}
+            {value === option.key && (
+              <svg
+                viewBox="0 0 24 24"
+                className="h-3.5 w-3.5 text-primary"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M5 12l5 5L20 7" />
+              </svg>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}

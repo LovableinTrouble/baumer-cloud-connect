@@ -1,0 +1,181 @@
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { fetchMediaById, fetchPerson, fetchPersonCredits, type PersonDetails } from "@/lib/tmdb";
+import type { Media } from "@/lib/catalog";
+import { MediaCard } from "@/components/MediaCard";
+
+export const Route = createFileRoute("/person/$id")({
+  head: () => ({ meta: [{ title: "Cast Member — Sleepy" }] }),
+  component: PersonPage,
+});
+
+function PersonPage() {
+  const { id } = Route.useParams();
+  const navigate = useNavigate();
+  const personId = Number(id);
+  const [person, setPerson] = useState<PersonDetails | null>(null);
+  const [credits, setCredits] = useState<Media[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [bioOpen, setBioOpen] = useState(false);
+  const [tab, setTab] = useState<"movie" | "tv">("movie");
+
+  useEffect(() => {
+    let dead = false;
+    setPerson(null);
+    setCredits([]);
+    setError(null);
+    fetchPerson(personId)
+      .then((p) => !dead && setPerson(p))
+      .catch((e) => !dead && setError(e?.message || "Failed to load"));
+    fetchPersonCredits(personId)
+      .then(async (c) => {
+        if (dead) return;
+        setCredits(c);
+        const enriched = await Promise.all(
+          c.slice(0, 10).map((m) => fetchMediaById(m.id, m.type).catch(() => m)),
+        );
+        if (!dead) setCredits([...enriched, ...c.slice(10)]);
+      })
+      .catch(() => {});
+    return () => {
+      dead = true;
+    };
+  }, [personId]);
+
+  const goBack = () => {
+    if (window.history.length > 1) window.history.back();
+    else navigate({ to: "/" });
+  };
+
+  const genres = [...new Set(credits.flatMap((m) => m.genres))].slice(0, 10);
+  const chips: string[] = [
+    person?.birthday ? `Born ${person.birthday}` : "",
+    person?.deathday ? `Died ${person.deathday}` : "",
+    person?.placeOfBirth ?? "",
+    person?.knownFor ?? "",
+    genres[0] ?? "",
+  ].filter(Boolean) as string[];
+  const shown = credits.filter((m) => m.type === tab);
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4 text-center">
+        <div>
+          <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+            Couldn't load person
+          </div>
+          <p className="mt-2 text-foreground">{error}</p>
+          <button
+            onClick={() => navigate({ to: "/" })}
+            className="mt-6 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
+          >
+            Go home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen pb-32 pt-24">
+      <div className="mx-auto max-w-7xl px-5 md:px-10">
+        <button
+          onClick={goBack}
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M15 18 9 12l6-6" />
+          </svg>
+          Back
+        </button>
+
+        <section className="mt-8 grid items-start gap-8 md:grid-cols-[16rem_minmax(0,1fr)] md:gap-12">
+          <div className="mx-auto w-40 sm:w-52 md:mx-0 md:w-full">
+            <div className="aspect-square overflow-hidden rounded-full bg-white/5 ring-1 ring-white/15 shadow-2xl">
+              {person?.profile ? (
+                <img
+                  src={person.profile}
+                  alt={person.name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-5xl text-muted-foreground/40">
+                  {person?.name?.[0] ?? "·"}
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="min-w-0 text-center md:text-left">
+            <h1 className="text-balance text-4xl font-black leading-[1.02] tracking-tight md:text-6xl">
+              {person?.name || "Loading…"}
+            </h1>
+            <div className="mt-4 flex flex-wrap justify-center gap-2 md:justify-start">
+              {chips.map((c) => (
+                <span
+                  key={c}
+                  className="rounded-full bg-white/[0.07] px-4 py-2 text-sm font-semibold text-foreground/85 ring-1 ring-white/10"
+                >
+                  {c}
+                </span>
+              ))}
+            </div>
+            <p
+              className={`mt-6 max-w-3xl whitespace-pre-line text-[15px] leading-relaxed text-foreground/80 ${
+                bioOpen ? "" : "line-clamp-6"
+              }`}
+            >
+              {person?.biography || "Loading biography…"}
+            </p>
+            {(person?.biography?.length ?? 0) > 320 && (
+              <button
+                onClick={() => setBioOpen((v) => !v)}
+                className="mt-3 text-sm font-semibold text-muted-foreground transition hover:text-foreground"
+              >
+                {bioOpen ? "Read Less" : "Read More"}
+              </button>
+            )}
+          </div>
+        </section>
+
+        <section className="mt-16">
+          <div className="mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
+            <h2 className="truncate text-2xl font-black tracking-tight md:text-3xl">Filmography</h2>
+            <div className="flex shrink-0 items-center gap-1 rounded-full bg-white/[0.06] p-1 ring-1 ring-white/10">
+              {(["movie", "tv"] as const).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTab(t)}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                    tab === t
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {t === "movie" ? "Movies" : "TV Shows"}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            {shown.map((m) => (
+              <MediaCard key={`${m.type}-${m.id}`} media={m} fill />
+            ))}
+            {shown.length === 0 && credits.length === 0 && (
+              <div className="col-span-full text-center text-sm text-muted-foreground">
+                Loading credits…
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}

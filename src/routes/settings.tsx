@@ -1,0 +1,717 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { Download } from "lucide-react";
+import { DEFAULT_SETTINGS, useSettings, type Settings } from "@/lib/store";
+import { THEMES } from "@/lib/themes";
+import { REGION_OPTIONS, detectRegion, type Region } from "@/lib/detectRegion";
+import { clearAllProgress } from "@/lib/progress";
+
+export const Route = createFileRoute("/settings")({
+  head: () => ({
+    meta: [
+      { title: "Settings — Sleepy" },
+      { name: "description", content: "Customize every part of your Sleepy experience." },
+    ],
+  }),
+  component: SettingsPage,
+});
+
+/* ---------- primitives ---------- */
+
+function Section({
+  title,
+  desc,
+  children,
+}: {
+  title: string;
+  desc?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="liquid-glass relative rounded-3xl p-6">
+      <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+      {desc && <p className="mt-1 text-xs text-muted-foreground">{desc}</p>}
+      <div className="mt-5 space-y-4">{children}</div>
+    </section>
+  );
+}
+
+function Row({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-3 border-b border-glass-border pb-4 last:border-0 last:pb-0 md:flex-row md:items-center md:justify-between md:gap-6">
+      <div className="min-w-0 flex-1">
+        <div className="text-sm font-medium">{label}</div>
+        {hint && <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{hint}</div>}
+      </div>
+      <div className="shrink-0">{children}</div>
+    </div>
+  );
+}
+
+function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={value}
+      onClick={() => onChange(!value)}
+      className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border transition-colors duration-200 ${
+        value
+          ? "border-primary/70 bg-primary shadow-[0_0_0_3px_color-mix(in_oklab,var(--primary)_15%,transparent)]"
+          : "border-white/15 bg-white/10 hover:bg-white/15"
+      }`}
+    >
+      <span
+        className={`pointer-events-none absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow-lg ring-1 ring-black/10 transition-transform duration-200 ${
+          value ? "translate-x-[1.55rem]" : "translate-x-0.5"
+        }`}
+      />
+    </button>
+  );
+}
+
+function Slider({
+  value,
+  onChange,
+  min = 0,
+  max = 100,
+  step = 1,
+  suffix,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  min?: number;
+  max?: number;
+  step?: number;
+  suffix?: string;
+}) {
+  return (
+    <div className="flex w-64 items-center gap-3">
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(+e.target.value)}
+        className="range-clean"
+        style={{
+          background: `linear-gradient(to right, var(--primary) 0%, var(--primary) ${((value - min) / (max - min)) * 100}%, color-mix(in oklab, var(--foreground) 10%, transparent) ${((value - min) / (max - min)) * 100}%, color-mix(in oklab, var(--foreground) 10%, transparent) 100%)`,
+        }}
+      />
+      <div className="w-14 shrink-0 text-right font-mono text-xs tabular-nums text-muted-foreground">
+        {value}
+        {suffix ?? ""}
+      </div>
+    </div>
+  );
+}
+
+function Select({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const active = options.find((o) => o.value === value) ?? options[0];
+  // Position of the menu in viewport coords, computed from the trigger rect.
+  // Using position: fixed + createPortal so the menu escapes every ancestor
+  // stacking context (each Settings section has `backdrop-blur-xl`, which
+  // creates one — without a portal the dropdown is trapped underneath
+  // subsequent sibling sections).
+  const [menuPos, setMenuPos] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    maxHeight: number;
+  } | null>(null);
+
+  // Recompute position whenever the menu is open (handles scroll / resize).
+  // The initial position is already set synchronously in the click handler,
+  // so this effect only needs to react to viewport changes.
+  useEffect(() => {
+    if (!open) return;
+    const update = () => {
+      const pos = computeMenuPos();
+      if (pos) setMenuPos(pos);
+    };
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [open]);
+
+  // Click-outside + Escape close.
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      const t = e.target as Node | null;
+      if (!t) return;
+      if (triggerRef.current?.contains(t)) return;
+      if (menuRef.current?.contains(t)) return;
+      setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const computeMenuPos = () => {
+    const r = triggerRef.current?.getBoundingClientRect();
+    if (!r) return null;
+    const MENU_WIDTH = 208; // matches w-52
+    const left = Math.max(8, Math.min(window.innerWidth - MENU_WIDTH - 8, r.right - MENU_WIDTH));
+    const GAP = 8;
+    const MARGIN = 12;
+    const estHeight = Math.min(options.length * 40 + 16, 360);
+    const spaceBelow = window.innerHeight - r.bottom - GAP - MARGIN;
+    const spaceAbove = r.top - GAP - MARGIN;
+    const openUp = spaceBelow < estHeight && spaceAbove > spaceBelow;
+    const maxHeight = Math.max(160, Math.min(estHeight, openUp ? spaceAbove : spaceBelow));
+    const top = openUp ? Math.max(MARGIN, r.top - GAP - maxHeight) : r.bottom + GAP;
+    return { top, left, width: MENU_WIDTH, maxHeight };
+  };
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => {
+          if (open) {
+            setOpen(false);
+            return;
+          }
+          // Compute position synchronously so the portal mounts with coords
+          // already set — avoids a single-frame render gap on open.
+          const pos = computeMenuPos();
+          if (pos) setMenuPos(pos);
+          setOpen(true);
+        }}
+        className="liquid-glass flex h-10 min-w-[10rem] items-center justify-between gap-3 rounded-full px-4 text-sm font-semibold text-foreground transition"
+        aria-expanded={open}
+      >
+        <span className="truncate">{active?.label}</span>
+        <svg
+          viewBox="0 0 24 24"
+          className={`h-3.5 w-3.5 shrink-0 text-muted-foreground transition ${open ? "rotate-180" : ""}`}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+      {open &&
+        menuPos &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={menuRef}
+            style={{
+              position: "fixed",
+              top: menuPos.top,
+              left: menuPos.left,
+              width: menuPos.width,
+              maxHeight: menuPos.maxHeight,
+              overflowY: "auto",
+              zIndex: 999999,
+            }}
+            className="rounded-2xl border border-white/10 bg-[oklch(0.16_0.02_280)] p-1.5 text-white shadow-2xl"
+          >
+            {options.map((o) => (
+              <button
+                key={o.value}
+                type="button"
+                onClick={() => {
+                  onChange(o.value);
+                  setOpen(false);
+                }}
+                className={`flex h-9 w-full items-center justify-between rounded-xl px-3 text-left text-xs font-semibold transition ${value === o.value ? "bg-primary/20 text-white ring-1 ring-primary/35" : "text-white/65 hover:bg-white/8 hover:text-white"}`}
+              >
+                {o.label}
+                {value === o.value && (
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-3.5 w-3.5 text-primary"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M5 12l5 5L20 7" />
+                  </svg>
+                )}
+              </button>
+            ))}
+          </div>,
+          document.body,
+        )}
+    </>
+  );
+}
+
+function TextField({
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  type?: string;
+}) {
+  return (
+    <input
+      type={type}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="w-full rounded-full border border-glass-border bg-background/60 px-4 py-2 text-sm outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/30"
+    />
+  );
+}
+
+function IntegrationCard({
+  name,
+  desc,
+  placeholder,
+  value,
+  onChange,
+}: {
+  name: string;
+  desc: string;
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const connected = value.trim().length > 0;
+  return (
+    <div className="rounded-2xl border border-glass-border bg-background/30 p-4 transition hover:border-primary/40">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            {name}
+            {connected && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-400 ring-1 ring-emerald-400/30">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-3 w-3"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                >
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+                Connected
+              </span>
+            )}
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">{desc}</div>
+        </div>
+        {connected && (
+          <button
+            onClick={() => onChange("")}
+            className="text-xs text-muted-foreground hover:text-destructive"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+      <div className="mt-3">
+        <TextField value={value} onChange={onChange} placeholder={placeholder} type="password" />
+      </div>
+    </div>
+  );
+}
+
+function RegionDetectButton({ onPicked }: { onPicked: (r: Region) => void }) {
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        setLoading(true);
+        setResult(null);
+        try {
+          if (typeof window !== "undefined") localStorage.removeItem("sleepy.region.v1");
+          const r = await detectRegion();
+          onPicked(r);
+          setResult(r);
+        } finally {
+          setLoading(false);
+        }
+      }}
+      className="liquid-pill inline-flex h-10 items-center gap-2 rounded-full px-4 text-xs font-bold transition hover:brightness-105 disabled:opacity-60"
+      disabled={loading}
+    >
+      {loading ? "Detecting…" : result ? `Detected: ${result}` : "Detect now"}
+    </button>
+  );
+}
+
+function SettingsPage() {
+  // Every change persists IMMEDIATELY via setSaved — no draft / save-bar dance.
+  // Previously toggles updated a local draft and looked "broken" until the user
+  // clicked Save; this applies on the spot.
+  const [s, setSaved] = useSettings();
+  const [cwCleared, setCwCleared] = useState(false);
+  const set = (patch: Partial<Settings>) => setSaved(patch);
+  const setInt = (patch: Partial<Settings["integrations"]>) =>
+    setSaved({ integrations: { ...s.integrations, ...patch } });
+  const ints = s.integrations;
+
+  return (
+    <div className="min-h-screen px-6 pb-40 pt-20 md:px-10 animate-page-in">
+      <div className="mx-auto max-w-4xl space-y-6">
+        <div>
+          <div className="text-xs uppercase tracking-[0.4em] text-primary/80">Customize</div>
+          <h1 className="mt-2 text-4xl font-black md:text-6xl">Settings</h1>
+          <p className="mt-2 text-muted-foreground">
+            Themes, playback, sources and integrations — all clean, all yours.
+          </p>
+        </div>
+
+        <a
+          href="/install"
+          className="group flex items-center gap-3 rounded-2xl border border-glass-border bg-card/40 px-4 py-3 backdrop-blur-xl transition hover:border-primary/40 hover:bg-card/60"
+        >
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary">
+            <Download className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-semibold">Android app</div>
+            <div className="text-[11px] text-muted-foreground">
+              Instant startup · offline · no ads
+            </div>
+          </div>
+          <span className="shrink-0 rounded-full bg-primary px-3 py-1 text-[11px] font-bold text-primary-foreground transition group-hover:brightness-110">
+            Get
+          </span>
+        </a>
+
+        {/* Febbox — top-of-settings integration so the player picks it up as an extra source. */}
+        <Section
+          title="Febbox"
+          desc="Paste your Febbox `ui` cookie (or full Cookie header) to unlock the Febbox source in the player. Leave empty to disable."
+        >
+          <IntegrationCard
+            name="Febbox cookie"
+            desc="Enables the high-quality Febbox provider (via Showbox share links). Stored locally only."
+            placeholder="ui=... or full Cookie value"
+            value={ints.febboxCookie}
+            onChange={(v) => setInt({ febboxCookie: v })}
+          />
+        </Section>
+
+        {/* Continue Watching maintenance */}
+        <Section title="Continue Watching" desc="Clear everything you've partially watched.">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+            <div className="min-w-0">
+              <div className="text-sm font-semibold">Clear Continue Watching</div>
+              <div className="text-[11px] text-muted-foreground">
+                Removes all saved playback positions. This can't be undone.
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                clearAllProgress();
+                setCwCleared(true);
+                window.setTimeout(() => setCwCleared(false), 2000);
+              }}
+              className="liquid-glass shrink-0 rounded-full px-4 py-2 text-xs font-bold text-rose-300 transition hover:bg-rose-500/20"
+            >
+              {cwCleared ? "Cleared" : "Clear all"}
+            </button>
+          </div>
+        </Section>
+
+        {/* p-stream region — picks the closest CDN/proxy edge for subtitles. */}
+        <Section
+          title="Streaming region"
+          desc="Pick the closest p-stream edge for lower latency. Auto detects the closest one by IP."
+        >
+          <Row
+            label="Region"
+            hint={`Detected: ${ints.pstreamRegion === "auto" ? "Auto" : ints.pstreamRegion}`}
+          >
+            <Select
+              value={ints.pstreamRegion}
+              onChange={(v) =>
+                setInt({ pstreamRegion: v as Settings["integrations"]["pstreamRegion"] })
+              }
+              options={REGION_OPTIONS.map((r) => ({ value: r.value, label: r.label }))}
+            />
+          </Row>
+          <Row label="Detect now" hint="Refresh the IP-based region cache.">
+            <RegionDetectButton
+              onPicked={(r) =>
+                setInt({
+                  pstreamRegion:
+                    r === "unknown" ? "auto" : (r as Settings["integrations"]["pstreamRegion"]),
+                })
+              }
+            />
+          </Row>
+        </Section>
+
+        {/* Theme picker */}
+        <Section
+          title="Theme"
+          desc="Pick a preset. Every surface, button and accent updates instantly when you save."
+        >
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {THEMES.map((t) => {
+              const active = s.theme === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => set({ theme: t.id })}
+                  className={`group relative overflow-hidden rounded-2xl border p-3 text-left transition ${active ? "border-primary ring-2 ring-primary/40" : "border-glass-border hover:border-primary/40"}`}
+                >
+                  <div className="flex h-14 overflow-hidden rounded-xl">
+                    {t.swatch.map((c, i) => (
+                      <div key={i} className="flex-1" style={{ background: c }} />
+                    ))}
+                  </div>
+                  <div className="mt-2 truncate text-sm font-semibold">{t.name}</div>
+                  <div className="truncate text-[11px] text-muted-foreground">{t.description}</div>
+                  {active && (
+                    <div className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="h-3 w-3"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                      >
+                        <path d="M20 6 9 17l-5-5" />
+                      </svg>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+            {/* Custom theme card */}
+            <button
+              onClick={() =>
+                set({
+                  theme: "custom",
+                  customTheme: s.customTheme ?? { primary: "#b06bff", background: "#0f0a1c" },
+                })
+              }
+              className={`group relative overflow-hidden rounded-2xl border p-3 text-left transition ${s.theme === "custom" ? "border-primary ring-2 ring-primary/40" : "border-glass-border hover:border-primary/40"}`}
+            >
+              <div className="flex h-14 overflow-hidden rounded-xl">
+                <div
+                  className="flex-1"
+                  style={{ background: s.customTheme?.background ?? "#0f0a1c" }}
+                />
+                <div
+                  className="flex-1"
+                  style={{ background: s.customTheme?.primary ?? "#b06bff" }}
+                />
+                <div
+                  className="flex-1 bg-gradient-to-br"
+                  style={{
+                    background: `linear-gradient(135deg, ${s.customTheme?.background ?? "#0f0a1c"}, ${s.customTheme?.primary ?? "#b06bff"})`,
+                  }}
+                />
+              </div>
+              <div className="mt-2 truncate text-sm font-semibold">Custom</div>
+              <div className="truncate text-[11px] text-muted-foreground">Pick your own colors</div>
+              {s.theme === "custom" && (
+                <div className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-3 w-3"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                  >
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                </div>
+              )}
+            </button>
+          </div>
+          {s.theme === "custom" && (
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="flex items-center justify-between rounded-2xl border border-glass-border bg-background/30 p-3">
+                <div>
+                  <div className="text-sm font-semibold">Primary</div>
+                  <div className="text-[11px] text-muted-foreground">Buttons, accents, links</div>
+                </div>
+                <input
+                  type="color"
+                  value={s.customTheme?.primary ?? "#b06bff"}
+                  onChange={(e) => {
+                    const primary = e.target.value;
+                    const bg = s.customTheme?.background ?? "#0f0a1c";
+                    set({ customTheme: { primary, background: bg } });
+                  }}
+                  className="h-10 w-16 cursor-pointer rounded-lg border border-glass-border bg-transparent color-picker"
+                />
+              </div>
+              <div className="flex items-center justify-between rounded-2xl border border-glass-border bg-background/30 p-3">
+                <div>
+                  <div className="text-sm font-semibold">Background</div>
+                  <div className="text-[11px] text-muted-foreground">Base surface color</div>
+                </div>
+                <input
+                  type="color"
+                  value={s.customTheme?.background ?? "#0f0a1c"}
+                  onChange={(e) => {
+                    const background = e.target.value;
+                    const primary = s.customTheme?.primary ?? "#b06bff";
+                    set({ customTheme: { primary, background } });
+                  }}
+                  className="h-10 w-16 cursor-pointer rounded-lg border border-glass-border bg-transparent color-picker"
+                />
+              </div>
+            </div>
+          )}
+        </Section>
+
+        <Section title="Appearance" desc="Customize how Sleepy looks and feels.">
+          <Row label="Animated background" hint="Soft drifting orbs behind the UI.">
+            <Toggle value={s.animatedBg} onChange={(v) => set({ animatedBg: v })} />
+          </Row>
+          <Row label="Site-wide animations" hint="Hovers, transitions and motion effects.">
+            <Toggle value={s.animationsEnabled} onChange={(v) => set({ animationsEnabled: v })} />
+          </Row>
+          <Row label="Reduce motion" hint="Honor system reduce-motion preference.">
+            <Toggle value={s.reduceMotion} onChange={(v) => set({ reduceMotion: v })} />
+          </Row>
+          <Row label="Show ratings" hint="Display IMDb/TMDB scores on media cards.">
+            <Toggle value={s.showRatings} onChange={(v) => set({ showRatings: v })} />
+          </Row>
+        </Section>
+
+        <Section
+          title="Integrations"
+          desc="Paste an API key to connect — a green check confirms it's saved."
+        >
+          <div className="grid gap-3 md:grid-cols-2">
+            <IntegrationCard
+              name="Real-Debrid"
+              desc="Premium high-speed links from hosters."
+              placeholder="Real-Debrid API token"
+              value={ints.realDebrid}
+              onChange={(v) => setInt({ realDebrid: v })}
+            />
+            <IntegrationCard
+              name="AllDebrid"
+              desc="Alternative debrid network."
+              placeholder="AllDebrid API key"
+              value={ints.allDebrid}
+              onChange={(v) => setInt({ allDebrid: v })}
+            />
+            <IntegrationCard
+              name="Premiumize"
+              desc="Cloud download + streaming."
+              placeholder="Premiumize API key"
+              value={ints.premiumize}
+              onChange={(v) => setInt({ premiumize: v })}
+            />
+            <IntegrationCard
+              name="Trakt.tv"
+              desc="Sync your watch history and lists."
+              placeholder="Trakt OAuth token"
+              value={ints.traktToken}
+              onChange={(v) => setInt({ traktToken: v })}
+            />
+            <IntegrationCard
+              name="Simkl"
+              desc="Track anime, TV and movies."
+              placeholder="Simkl OAuth token"
+              value={ints.simklToken}
+              onChange={(v) => setInt({ simklToken: v })}
+            />
+            <IntegrationCard
+              name="OpenSubtitles"
+              desc="Multi-language subtitles."
+              placeholder="OpenSubtitles API key"
+              value={ints.openSubtitles}
+              onChange={(v) => setInt({ openSubtitles: v })}
+            />
+          </div>
+        </Section>
+
+        <Section title="Catalog">
+          <Row label="Custom TMDB API key" hint="Leave blank to use the built-in key.">
+            <div className="w-72">
+              <TextField
+                value={s.tmdbApiKey}
+                onChange={(v) => set({ tmdbApiKey: v })}
+                placeholder="optional"
+              />
+            </div>
+          </Row>
+          <Row label="Region">
+            <div className="w-24">
+              <TextField value={s.region} onChange={(v) => set({ region: v })} />
+            </div>
+          </Row>
+          <Row label="Language">
+            <Select
+              value={s.language}
+              onChange={(v) => set({ language: v as Settings["language"] })}
+              options={[
+                { value: "en", label: "English" },
+                { value: "es", label: "Español" },
+                { value: "fr", label: "Français" },
+                { value: "ja", label: "日本語" },
+                { value: "de", label: "Deutsch" },
+              ]}
+            />
+          </Row>
+          <Row label="Show mature content">
+            <Toggle value={s.matureContent} onChange={(v) => set({ matureContent: v })} />
+          </Row>
+        </Section>
+
+        <button
+          onClick={() => {
+            localStorage.removeItem("sleepy.settings.v2");
+            location.reload();
+          }}
+          className="liquid-glass rounded-full px-5 py-2.5 text-sm font-semibold text-muted-foreground transition hover:text-foreground"
+        >
+          Reset to defaults
+        </button>
+        <p className="text-xs text-muted-foreground">Default theme: {DEFAULT_SETTINGS.theme}</p>
+      </div>
+    </div>
+  );
+}

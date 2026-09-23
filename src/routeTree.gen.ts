@@ -9,38 +9,490 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WatchlistRouteImport } from './routes/watchlist'
+import { Route as SportsRouteImport } from './routes/sports'
+import { Route as SleepyRouteImport } from './routes/sleepy'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ShortsRouteImport } from './routes/shorts'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SearchRouteImport } from './routes/search'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as IptvRouteImport } from './routes/iptv'
+import { Route as InstallRouteImport } from './routes/install'
+import { Route as GamesRouteImport } from './routes/games'
+import { Route as ExploreRouteImport } from './routes/explore'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WatchIdRouteImport } from './routes/watch.$id'
+import { Route as SportsIdRouteImport } from './routes/sports.$id'
+import { Route as PersonIdRouteImport } from './routes/person.$id'
+import { Route as LiveIdRouteImport } from './routes/live.$id'
+import { Route as ApiDownloadsRouteImport } from './routes/api/downloads'
+import { Route as MediaTypeIdRouteImport } from './routes/media.$type.$id'
+import { Route as ApiPublicYtPlaylistRouteImport } from './routes/api/public/yt-playlist'
+import { Route as ApiPublicSubtitleRouteImport } from './routes/api/public/subtitle'
+import { Route as ApiPublicIptvProxyRouteImport } from './routes/api/public/iptv-proxy'
+import { Route as ApiPublicIptvOrgRouteImport } from './routes/api/public/iptv-org'
+import { Route as ApiPublicGamesFeedRouteImport } from './routes/api/public/games-feed'
+import { Route as ApiPublicDownloadRouteImport } from './routes/api/public/download'
+import { Route as ApiPpvStreamsRouteImport } from './routes/api/ppv.streams'
 
+const WatchlistRoute = WatchlistRouteImport.update({
+  id: '/watchlist',
+  path: '/watchlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SportsRoute = SportsRouteImport.update({
+  id: '/sports',
+  path: '/sports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SleepyRoute = SleepyRouteImport.update({
+  id: '/sleepy',
+  path: '/sleepy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShortsRoute = ShortsRouteImport.update({
+  id: '/shorts',
+  path: '/shorts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IptvRoute = IptvRouteImport.update({
+  id: '/iptv',
+  path: '/iptv',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InstallRoute = InstallRouteImport.update({
+  id: '/install',
+  path: '/install',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamesRoute = GamesRouteImport.update({
+  id: '/games',
+  path: '/games',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExploreRoute = ExploreRouteImport.update({
+  id: '/explore',
+  path: '/explore',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WatchIdRoute = WatchIdRouteImport.update({
+  id: '/watch/$id',
+  path: '/watch/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SportsIdRoute = SportsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => SportsRoute,
+} as any)
+const PersonIdRoute = PersonIdRouteImport.update({
+  id: '/person/$id',
+  path: '/person/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LiveIdRoute = LiveIdRouteImport.update({
+  id: '/live/$id',
+  path: '/live/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDownloadsRoute = ApiDownloadsRouteImport.update({
+  id: '/api/downloads',
+  path: '/api/downloads',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MediaTypeIdRoute = MediaTypeIdRouteImport.update({
+  id: '/media/$type/$id',
+  path: '/media/$type/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicYtPlaylistRoute = ApiPublicYtPlaylistRouteImport.update({
+  id: '/api/public/yt-playlist',
+  path: '/api/public/yt-playlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicSubtitleRoute = ApiPublicSubtitleRouteImport.update({
+  id: '/api/public/subtitle',
+  path: '/api/public/subtitle',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicIptvProxyRoute = ApiPublicIptvProxyRouteImport.update({
+  id: '/api/public/iptv-proxy',
+  path: '/api/public/iptv-proxy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicIptvOrgRoute = ApiPublicIptvOrgRouteImport.update({
+  id: '/api/public/iptv-org',
+  path: '/api/public/iptv-org',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicGamesFeedRoute = ApiPublicGamesFeedRouteImport.update({
+  id: '/api/public/games-feed',
+  path: '/api/public/games-feed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicDownloadRoute = ApiPublicDownloadRouteImport.update({
+  id: '/api/public/download',
+  path: '/api/public/download',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPpvStreamsRoute = ApiPpvStreamsRouteImport.update({
+  id: '/api/ppv/streams',
+  path: '/api/ppv/streams',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/auth': typeof AuthRoute
+  '/explore': typeof ExploreRoute
+  '/games': typeof GamesRoute
+  '/install': typeof InstallRoute
+  '/iptv': typeof IptvRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
+  '/shorts': typeof ShortsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/sleepy': typeof SleepyRoute
+  '/sports': typeof SportsRouteWithChildren
+  '/watchlist': typeof WatchlistRoute
+  '/api/downloads': typeof ApiDownloadsRoute
+  '/live/$id': typeof LiveIdRoute
+  '/person/$id': typeof PersonIdRoute
+  '/sports/$id': typeof SportsIdRoute
+  '/watch/$id': typeof WatchIdRoute
+  '/api/ppv/streams': typeof ApiPpvStreamsRoute
+  '/api/public/download': typeof ApiPublicDownloadRoute
+  '/api/public/games-feed': typeof ApiPublicGamesFeedRoute
+  '/api/public/iptv-org': typeof ApiPublicIptvOrgRoute
+  '/api/public/iptv-proxy': typeof ApiPublicIptvProxyRoute
+  '/api/public/subtitle': typeof ApiPublicSubtitleRoute
+  '/api/public/yt-playlist': typeof ApiPublicYtPlaylistRoute
+  '/media/$type/$id': typeof MediaTypeIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/auth': typeof AuthRoute
+  '/explore': typeof ExploreRoute
+  '/games': typeof GamesRoute
+  '/install': typeof InstallRoute
+  '/iptv': typeof IptvRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
+  '/shorts': typeof ShortsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/sleepy': typeof SleepyRoute
+  '/sports': typeof SportsRouteWithChildren
+  '/watchlist': typeof WatchlistRoute
+  '/api/downloads': typeof ApiDownloadsRoute
+  '/live/$id': typeof LiveIdRoute
+  '/person/$id': typeof PersonIdRoute
+  '/sports/$id': typeof SportsIdRoute
+  '/watch/$id': typeof WatchIdRoute
+  '/api/ppv/streams': typeof ApiPpvStreamsRoute
+  '/api/public/download': typeof ApiPublicDownloadRoute
+  '/api/public/games-feed': typeof ApiPublicGamesFeedRoute
+  '/api/public/iptv-org': typeof ApiPublicIptvOrgRoute
+  '/api/public/iptv-proxy': typeof ApiPublicIptvProxyRoute
+  '/api/public/subtitle': typeof ApiPublicSubtitleRoute
+  '/api/public/yt-playlist': typeof ApiPublicYtPlaylistRoute
+  '/media/$type/$id': typeof MediaTypeIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/auth': typeof AuthRoute
+  '/explore': typeof ExploreRoute
+  '/games': typeof GamesRoute
+  '/install': typeof InstallRoute
+  '/iptv': typeof IptvRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
+  '/shorts': typeof ShortsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/sleepy': typeof SleepyRoute
+  '/sports': typeof SportsRouteWithChildren
+  '/watchlist': typeof WatchlistRoute
+  '/api/downloads': typeof ApiDownloadsRoute
+  '/live/$id': typeof LiveIdRoute
+  '/person/$id': typeof PersonIdRoute
+  '/sports/$id': typeof SportsIdRoute
+  '/watch/$id': typeof WatchIdRoute
+  '/api/ppv/streams': typeof ApiPpvStreamsRoute
+  '/api/public/download': typeof ApiPublicDownloadRoute
+  '/api/public/games-feed': typeof ApiPublicGamesFeedRoute
+  '/api/public/iptv-org': typeof ApiPublicIptvOrgRoute
+  '/api/public/iptv-proxy': typeof ApiPublicIptvProxyRoute
+  '/api/public/subtitle': typeof ApiPublicSubtitleRoute
+  '/api/public/yt-playlist': typeof ApiPublicYtPlaylistRoute
+  '/media/$type/$id': typeof MediaTypeIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/account'
+    | '/auth'
+    | '/explore'
+    | '/games'
+    | '/install'
+    | '/iptv'
+    | '/reset-password'
+    | '/search'
+    | '/settings'
+    | '/shorts'
+    | '/sitemap.xml'
+    | '/sleepy'
+    | '/sports'
+    | '/watchlist'
+    | '/api/downloads'
+    | '/live/$id'
+    | '/person/$id'
+    | '/sports/$id'
+    | '/watch/$id'
+    | '/api/ppv/streams'
+    | '/api/public/download'
+    | '/api/public/games-feed'
+    | '/api/public/iptv-org'
+    | '/api/public/iptv-proxy'
+    | '/api/public/subtitle'
+    | '/api/public/yt-playlist'
+    | '/media/$type/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/account'
+    | '/auth'
+    | '/explore'
+    | '/games'
+    | '/install'
+    | '/iptv'
+    | '/reset-password'
+    | '/search'
+    | '/settings'
+    | '/shorts'
+    | '/sitemap.xml'
+    | '/sleepy'
+    | '/sports'
+    | '/watchlist'
+    | '/api/downloads'
+    | '/live/$id'
+    | '/person/$id'
+    | '/sports/$id'
+    | '/watch/$id'
+    | '/api/ppv/streams'
+    | '/api/public/download'
+    | '/api/public/games-feed'
+    | '/api/public/iptv-org'
+    | '/api/public/iptv-proxy'
+    | '/api/public/subtitle'
+    | '/api/public/yt-playlist'
+    | '/media/$type/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/account'
+    | '/auth'
+    | '/explore'
+    | '/games'
+    | '/install'
+    | '/iptv'
+    | '/reset-password'
+    | '/search'
+    | '/settings'
+    | '/shorts'
+    | '/sitemap.xml'
+    | '/sleepy'
+    | '/sports'
+    | '/watchlist'
+    | '/api/downloads'
+    | '/live/$id'
+    | '/person/$id'
+    | '/sports/$id'
+    | '/watch/$id'
+    | '/api/ppv/streams'
+    | '/api/public/download'
+    | '/api/public/games-feed'
+    | '/api/public/iptv-org'
+    | '/api/public/iptv-proxy'
+    | '/api/public/subtitle'
+    | '/api/public/yt-playlist'
+    | '/media/$type/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountRoute: typeof AccountRoute
+  AuthRoute: typeof AuthRoute
+  ExploreRoute: typeof ExploreRoute
+  GamesRoute: typeof GamesRoute
+  InstallRoute: typeof InstallRoute
+  IptvRoute: typeof IptvRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  SearchRoute: typeof SearchRoute
+  SettingsRoute: typeof SettingsRoute
+  ShortsRoute: typeof ShortsRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  SleepyRoute: typeof SleepyRoute
+  SportsRoute: typeof SportsRouteWithChildren
+  WatchlistRoute: typeof WatchlistRoute
+  ApiDownloadsRoute: typeof ApiDownloadsRoute
+  LiveIdRoute: typeof LiveIdRoute
+  PersonIdRoute: typeof PersonIdRoute
+  WatchIdRoute: typeof WatchIdRoute
+  ApiPpvStreamsRoute: typeof ApiPpvStreamsRoute
+  ApiPublicDownloadRoute: typeof ApiPublicDownloadRoute
+  ApiPublicGamesFeedRoute: typeof ApiPublicGamesFeedRoute
+  ApiPublicIptvOrgRoute: typeof ApiPublicIptvOrgRoute
+  ApiPublicIptvProxyRoute: typeof ApiPublicIptvProxyRoute
+  ApiPublicSubtitleRoute: typeof ApiPublicSubtitleRoute
+  ApiPublicYtPlaylistRoute: typeof ApiPublicYtPlaylistRoute
+  MediaTypeIdRoute: typeof MediaTypeIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/watchlist': {
+      id: '/watchlist'
+      path: '/watchlist'
+      fullPath: '/watchlist'
+      preLoaderRoute: typeof WatchlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sports': {
+      id: '/sports'
+      path: '/sports'
+      fullPath: '/sports'
+      preLoaderRoute: typeof SportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sleepy': {
+      id: '/sleepy'
+      path: '/sleepy'
+      fullPath: '/sleepy'
+      preLoaderRoute: typeof SleepyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shorts': {
+      id: '/shorts'
+      path: '/shorts'
+      fullPath: '/shorts'
+      preLoaderRoute: typeof ShortsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/iptv': {
+      id: '/iptv'
+      path: '/iptv'
+      fullPath: '/iptv'
+      preLoaderRoute: typeof IptvRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/install': {
+      id: '/install'
+      path: '/install'
+      fullPath: '/install'
+      preLoaderRoute: typeof InstallRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/games': {
+      id: '/games'
+      path: '/games'
+      fullPath: '/games'
+      preLoaderRoute: typeof GamesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explore': {
+      id: '/explore'
+      path: '/explore'
+      fullPath: '/explore'
+      preLoaderRoute: typeof ExploreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +500,139 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/watch/$id': {
+      id: '/watch/$id'
+      path: '/watch/$id'
+      fullPath: '/watch/$id'
+      preLoaderRoute: typeof WatchIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sports/$id': {
+      id: '/sports/$id'
+      path: '/$id'
+      fullPath: '/sports/$id'
+      preLoaderRoute: typeof SportsIdRouteImport
+      parentRoute: typeof SportsRoute
+    }
+    '/person/$id': {
+      id: '/person/$id'
+      path: '/person/$id'
+      fullPath: '/person/$id'
+      preLoaderRoute: typeof PersonIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/live/$id': {
+      id: '/live/$id'
+      path: '/live/$id'
+      fullPath: '/live/$id'
+      preLoaderRoute: typeof LiveIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/downloads': {
+      id: '/api/downloads'
+      path: '/api/downloads'
+      fullPath: '/api/downloads'
+      preLoaderRoute: typeof ApiDownloadsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/media/$type/$id': {
+      id: '/media/$type/$id'
+      path: '/media/$type/$id'
+      fullPath: '/media/$type/$id'
+      preLoaderRoute: typeof MediaTypeIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/yt-playlist': {
+      id: '/api/public/yt-playlist'
+      path: '/api/public/yt-playlist'
+      fullPath: '/api/public/yt-playlist'
+      preLoaderRoute: typeof ApiPublicYtPlaylistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/subtitle': {
+      id: '/api/public/subtitle'
+      path: '/api/public/subtitle'
+      fullPath: '/api/public/subtitle'
+      preLoaderRoute: typeof ApiPublicSubtitleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/iptv-proxy': {
+      id: '/api/public/iptv-proxy'
+      path: '/api/public/iptv-proxy'
+      fullPath: '/api/public/iptv-proxy'
+      preLoaderRoute: typeof ApiPublicIptvProxyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/iptv-org': {
+      id: '/api/public/iptv-org'
+      path: '/api/public/iptv-org'
+      fullPath: '/api/public/iptv-org'
+      preLoaderRoute: typeof ApiPublicIptvOrgRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/games-feed': {
+      id: '/api/public/games-feed'
+      path: '/api/public/games-feed'
+      fullPath: '/api/public/games-feed'
+      preLoaderRoute: typeof ApiPublicGamesFeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/download': {
+      id: '/api/public/download'
+      path: '/api/public/download'
+      fullPath: '/api/public/download'
+      preLoaderRoute: typeof ApiPublicDownloadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ppv/streams': {
+      id: '/api/ppv/streams'
+      path: '/api/ppv/streams'
+      fullPath: '/api/ppv/streams'
+      preLoaderRoute: typeof ApiPpvStreamsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface SportsRouteChildren {
+  SportsIdRoute: typeof SportsIdRoute
+}
+
+const SportsRouteChildren: SportsRouteChildren = {
+  SportsIdRoute: SportsIdRoute,
+}
+
+const SportsRouteWithChildren =
+  SportsRoute._addFileChildren(SportsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountRoute: AccountRoute,
+  AuthRoute: AuthRoute,
+  ExploreRoute: ExploreRoute,
+  GamesRoute: GamesRoute,
+  InstallRoute: InstallRoute,
+  IptvRoute: IptvRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  SearchRoute: SearchRoute,
+  SettingsRoute: SettingsRoute,
+  ShortsRoute: ShortsRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  SleepyRoute: SleepyRoute,
+  SportsRoute: SportsRouteWithChildren,
+  WatchlistRoute: WatchlistRoute,
+  ApiDownloadsRoute: ApiDownloadsRoute,
+  LiveIdRoute: LiveIdRoute,
+  PersonIdRoute: PersonIdRoute,
+  WatchIdRoute: WatchIdRoute,
+  ApiPpvStreamsRoute: ApiPpvStreamsRoute,
+  ApiPublicDownloadRoute: ApiPublicDownloadRoute,
+  ApiPublicGamesFeedRoute: ApiPublicGamesFeedRoute,
+  ApiPublicIptvOrgRoute: ApiPublicIptvOrgRoute,
+  ApiPublicIptvProxyRoute: ApiPublicIptvProxyRoute,
+  ApiPublicSubtitleRoute: ApiPublicSubtitleRoute,
+  ApiPublicYtPlaylistRoute: ApiPublicYtPlaylistRoute,
+  MediaTypeIdRoute: MediaTypeIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
