@@ -148,7 +148,7 @@ export const DEFAULT_SETTINGS: Settings = {
   autoSync: true,
 };
 
-const KEY = "sleepy.settings.v2";
+const KEY = "baumer.settings.v2";
 
 let listeners: Array<() => void> = [];
 let cached: Settings | null = null;
@@ -213,8 +213,8 @@ export interface WatchFolder {
   createdAt: number;
 }
 
-const WL_KEY = "sleepy.watchlist.v1"; // legacy flat list (kept for backward compat)
-const WF_KEY = "sleepy.watchfolders.v1";
+const WL_KEY = "baumer.watchlist.v1"; // legacy flat list (kept for backward compat)
+const WF_KEY = "baumer.watchfolders.v1";
 
 let folderListeners: Array<() => void> = [];
 let foldersCache: WatchFolder[] | null = null;

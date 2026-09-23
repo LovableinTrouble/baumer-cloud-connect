@@ -14,7 +14,7 @@ export interface ViewerProfile {
 
 export const MAX_PROFILES = 4;
 
-const ACTIVE_KEY = "sleepy.activeProfile";
+const ACTIVE_KEY = "baumer.activeProfile";
 const listeners = new Set<() => void>();
 
 export interface ActiveProfile {

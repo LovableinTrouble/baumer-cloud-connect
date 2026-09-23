@@ -15,7 +15,7 @@ import {
 export const Route = createFileRoute("/live/$id")({
   head: () => ({
     meta: [
-      { title: "Live TV — Sleepy" },
+      { title: "Live TV — Baumer" },
       { name: "description", content: "Live IPTV channel player." },
     ],
   }),

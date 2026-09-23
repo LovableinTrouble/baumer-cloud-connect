@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const KEY = "sleepy.avatarUrl";
+const KEY = "baumer.avatarUrl";
 const listeners = new Set<() => void>();
 
 export function getAvatarUrl(): string | null {

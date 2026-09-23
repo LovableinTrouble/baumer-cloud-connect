@@ -1,7 +1,7 @@
 // Local-only watch-progress store.
 import { useEffect, useState } from "react";
 
-const LOCAL_KEY = "sleepy.progress.v1";
+const LOCAL_KEY = "baumer.progress.v1";
 
 export interface LocalProgressEntry {
   mediaId: number;

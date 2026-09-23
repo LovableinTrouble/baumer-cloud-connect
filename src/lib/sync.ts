@@ -2,8 +2,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { getSettings, setSettings, getFolders, saveFolders, type Settings } from "@/lib/store";
 import { getLocalProgress, type LocalProgressEntry } from "@/lib/progress";
 
-const PROGRESS_KEY = "sleepy.progress.v1";
-export const LAST_SYNC_KEY = "sleepy.lastSync";
+const PROGRESS_KEY = "baumer.progress.v1";
+export const LAST_SYNC_KEY = "baumer.lastSync";
 
 export interface SyncRow {
   settings: Partial<Settings>;

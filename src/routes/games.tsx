@@ -24,7 +24,7 @@ type SortMode = "featured" | "name" | "new";
 export const Route = createFileRoute("/games")({
   head: () => ({
     meta: [
-      { title: "Games — Sleepy" },
+      { title: "Games — Baumer" },
       {
         name: "description",
         content: "Play hundreds of free web games instantly. Curated, ad-free, in one click.",

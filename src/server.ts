@@ -38,36 +38,9 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   });
 }
 
-function unauthorizedResponse(): Response {
-  return new Response(null, {
-    status: 401,
-    headers: { "WWW-Authenticate": 'Basic realm="Private Family Portal", charset="UTF-8"' },
-  });
-}
-
-function isAuthorized(request: Request, env: any): boolean {
-  const expectedUsername = env?.BASIC_AUTH_USERNAME ?? process.env.BASIC_AUTH_USERNAME;
-  const expectedPassword = env?.BASIC_AUTH_PASSWORD ?? process.env.BASIC_AUTH_PASSWORD;
-  if (!expectedUsername || !expectedPassword) return false;
-
-  const header = request.headers.get("authorization");
-  if (!header?.startsWith("Basic ")) return false;
-
-  try {
-    const decoded = atob(header.slice(6));
-    const separator = decoded.indexOf(":");
-    if (separator < 0) return false;
-    const username = decoded.slice(0, separator);
-    const password = decoded.slice(separator + 1);
-    return username === expectedUsername && password === expectedPassword;
-  } catch {
-    return false;
-  }
-}
-
 export default {
   async fetch(request: Request, env: any, ctx: any) {
-    if (!isAuthorized(request, env)) return unauthorizedResponse();
+
 
     try {
       const handler = await getServerEntry();

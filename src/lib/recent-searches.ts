@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const KEY = "sleepy.recent-searches.v1";
+const KEY = "baumer.recent-searches.v1";
 const MAX = 8;
 
 function read(): string[] {

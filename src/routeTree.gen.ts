@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WatchlistRouteImport } from './routes/watchlist'
 import { Route as SportsRouteImport } from './routes/sports'
-import { Route as SleepyRouteImport } from './routes/sleepy'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ShortsRouteImport } from './routes/shorts'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -46,11 +45,6 @@ const WatchlistRoute = WatchlistRouteImport.update({
 const SportsRoute = SportsRouteImport.update({
   id: '/sports',
   path: '/sports',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SleepyRoute = SleepyRouteImport.update({
-  id: '/sleepy',
-  path: '/sleepy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -192,7 +186,6 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/shorts': typeof ShortsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/sleepy': typeof SleepyRoute
   '/sports': typeof SportsRouteWithChildren
   '/watchlist': typeof WatchlistRoute
   '/api/downloads': typeof ApiDownloadsRoute
@@ -222,7 +215,6 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/shorts': typeof ShortsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/sleepy': typeof SleepyRoute
   '/sports': typeof SportsRouteWithChildren
   '/watchlist': typeof WatchlistRoute
   '/api/downloads': typeof ApiDownloadsRoute
@@ -253,7 +245,6 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/shorts': typeof ShortsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/sleepy': typeof SleepyRoute
   '/sports': typeof SportsRouteWithChildren
   '/watchlist': typeof WatchlistRoute
   '/api/downloads': typeof ApiDownloadsRoute
@@ -285,7 +276,6 @@ export interface FileRouteTypes {
     | '/settings'
     | '/shorts'
     | '/sitemap.xml'
-    | '/sleepy'
     | '/sports'
     | '/watchlist'
     | '/api/downloads'
@@ -315,7 +305,6 @@ export interface FileRouteTypes {
     | '/settings'
     | '/shorts'
     | '/sitemap.xml'
-    | '/sleepy'
     | '/sports'
     | '/watchlist'
     | '/api/downloads'
@@ -345,7 +334,6 @@ export interface FileRouteTypes {
     | '/settings'
     | '/shorts'
     | '/sitemap.xml'
-    | '/sleepy'
     | '/sports'
     | '/watchlist'
     | '/api/downloads'
@@ -376,7 +364,6 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   ShortsRoute: typeof ShortsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
-  SleepyRoute: typeof SleepyRoute
   SportsRoute: typeof SportsRouteWithChildren
   WatchlistRoute: typeof WatchlistRoute
   ApiDownloadsRoute: typeof ApiDownloadsRoute
@@ -407,13 +394,6 @@ declare module '@tanstack/react-router' {
       path: '/sports'
       fullPath: '/sports'
       preLoaderRoute: typeof SportsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sleepy': {
-      id: '/sleepy'
-      path: '/sleepy'
-      fullPath: '/sleepy'
-      preLoaderRoute: typeof SleepyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -618,7 +598,6 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   ShortsRoute: ShortsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
-  SleepyRoute: SleepyRoute,
   SportsRoute: SportsRouteWithChildren,
   WatchlistRoute: WatchlistRoute,
   ApiDownloadsRoute: ApiDownloadsRoute,

@@ -85,7 +85,7 @@ export const EMBED_SERVERS: EmbedServer[] = [
   },
 ];
 
-const LAST_KEY = "sleepy.last-server";
+const LAST_KEY = "baumer.last-server";
 
 export function getLastServer(): ServerId | null {
   if (typeof window === "undefined") return null;

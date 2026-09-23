@@ -62,7 +62,7 @@ function closestRegion(lat: number, lon: number): Region {
   return best;
 }
 
-const CACHE_KEY = "sleepy.region.v1";
+const CACHE_KEY = "baumer.region.v1";
 const TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 interface CacheEntry {
